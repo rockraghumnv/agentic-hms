@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Healthcare Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-header h1 {
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4CAF50;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .language-toggle {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .lang-btn {
+            padding: 8px 16px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active {
+            background: white;
+            color: #667eea;
+        }
+        
+        .login-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        
+        .login-screen h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .login-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        
+        .login-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f7fb;
+        }
+        
+        .message {
+            display: flex;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.user {
+            justify-content: flex-end;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            line-height: 1.5;
+        }
+        
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            margin: 0 10px;
+        }
+        
+        .message.bot .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+        
+        .message.user .message-avatar {
+            background: #764ba2;
+            color: white;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 18px;
+            width: fit-content;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .typing-indicator.show {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite;
+        }
+        
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .chat-input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+        
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+        
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .send-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .explain-btn {
+            background: #f0f4ff;
+            color: #667eea;
+            border: 1px solid #667eea;
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .explain-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        .patient-info {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        
+        .patient-info strong {
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>
+                <span class="status-indicator"></span>
+                🏥 AI Healthcare Assistant
+            </h1>
+            <div class="language-toggle">
+                <button class="lang-btn active" data-lang="english">English</button>
+                <button class="lang-btn" data-lang="kannada">ಕನ್ನಡ</button>
+            </div>
+        </div>
+
+        <!-- Login Screen -->
+        <div class="login-screen" id="loginScreen">
+            <h2>Welcome Back!</h2>
+            <p style="color: #666; margin-bottom: 30px;">Enter your Patient ID to continue</p>
+            <input type="text" 
+                   id="patientIdInput" 
+                   class="login-input" 
+                   placeholder="PT-2026-XXXX"
+                   maxlength="13">
+            <button class="login-btn" id="loginBtn">Access My Health Assistant</button>
+            <p style="color: #999; margin-top: 20px; font-size: 0.9em;">
+                Don't have an ID? <a href="upload.html" style="color: #667eea;">Upload your records here</a>
+            </p>
+        </div>
+
+        <!-- Chat Interface (Hidden by default) -->
+        <div class="hidden" id="chatInterface">
+            <div class="patient-info" id="patientInfo"></div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will appear here -->
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            
+            <div class="chat-input-area">
+                <div class="input-wrapper">
+                    <input type="text" 
+                           id="messageInput" 
+                           class="chat-input" 
+                           placeholder="Ask me about your health..."
+                           disabled>
+                    <button class="send-btn" id="sendBtn" disabled>➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPatientId = null;
+        let currentLanguage = 'english';
+        let conversationHistory = [];
+
+        // Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const chatInterface = document.getElementById('chatInterface');
+        const patientIdInput = document.getElementById('patientIdInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatMessages = document.getElementById('chatMessages');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const patientInfo = document.getElementById('patientInfo');
+        const langBtns = document.querySelectorAll('.lang-btn');
+
+        // Language toggle
+        langBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                langBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLanguage = btn.dataset.lang;
+                
+                if (currentLanguage === 'kannada') {
+                    messageInput.placeholder = 'ನಿಮ್ಮ ಆರೋಗ್ಯದ ಬಗ್ಗೆ ನನ್ನನ್ನು ಕೇಳಿ...';
+                } else {
+                    messageInput.placeholder = 'Ask me about your health...';
+                }
+            });
+        });
+
+        // Login
+        loginBtn.addEventListener('click', async () => {
+            const patientId = patientIdInput.value.trim();
+            
+            if (!patientId) {
+                alert('Please enter your Patient ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`http://localhost:8000/api/patient/${patientId}/verify`);
+                const data = await response.json();
+                
+                if (data.exists) {
+                    currentPatientId = patientId;
+                    loginScreen.classList.add('hidden');
+                    chatInterface.classList.remove('hidden');
+                    messageInput.disabled = false;
+                    sendBtn.disabled = false;
+                    
+                    patientInfo.innerHTML = `<strong>Patient ID:</strong> ${patientId} | <strong>Status:</strong> Connected ✓`;
+                    
+                    // Send welcome message
+                    addBotMessage(
+                        currentLanguage === 'kannada' 
+                        ? 'ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಆರೋಗ್ಯದ ಬಗ್ಗೆ ನಾನು ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು?' 
+                        : 'Hello! How can I help you with your health today?'
+                    );
+                } else {
+                    alert('Patient ID not found. Please check and try again.');
+                }
+            } catch (error) {
+                alert('Error connecting to server. Please try again.');
+            }
+        });
+
+        // Send message on Enter key
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !sendBtn.disabled) {
+                sendMessage();
+            }
+        });
+
+        // Send message on button click
+        sendBtn.addEventListener('click', sendMessage);
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            addUserMessage(message);
+            messageInput.value = '';
+            
+            // Show typing indicator
+            typingIndicator.classList.add('show');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patient_id: currentPatientId,
+                        message: message,
+                        language: currentLanguage
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Hide typing indicator
+                typingIndicator.classList.remove('show');
+                
+                if (response.ok) {
+                    addBotMessage(data.response, data.message_id);
+                } else {
+                    addBotMessage('Sorry, I encountered an error. Please try again.');
+                }
+            } catch (error) {
+                typingIndicator.classList.remove('show');
+                addBotMessage('Sorry, I could not connect to the server. Please try again.');
+            }
+        }
+
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.innerHTML = `
+                <div class="message-content">${escapeHtml(text)}</div>
+                <div class="message-avatar">👤</div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addBotMessage(text, messageId) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            let content = `
+                <div class="message-avatar">🤖</div>
+                <div>
+                    <div class="message-content">${escapeHtml(text)}</div>
+            `;
+            
+            if (messageId) {
+                content += `<button class="explain-btn" onclick="explainResponse('${messageId}')">🔍 See How AI Analyzed This</button>`;
+            }
+            
+            content += `</div>`;
+            
+            messageDiv.innerHTML = content;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function explainResponse(messageId) {
+            try {
+                const response = await fetch('http://localhost:8000/api/explain', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patient_id: currentPatientId,
+                        message_id: messageId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showExplanationModal(data.explanation);
+                } else {
+                    alert('Could not retrieve explanation. Please try again.');
+                }
+            } catch (error) {
+                alert('Error retrieving explanation: ' + error.message);
+            }
+        }
+        
+        function showExplanationModal(explanation) {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+                animation: fadeIn 0.3s;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white;
+                border-radius: 15px;
+                padding: 30px;
+                max-width: 700px;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                animation: slideUp 0.3s;
+            `;
+            
+            // Build explanation HTML
+            let html = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="color: #667eea; margin: 0;">🔍 AI Analysis Explanation</h2>
+                    <button onclick="this.closest('.modal-wrapper').remove()" 
+                            style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">✕</button>
+                </div>
+                
+                <div style="background: #f5f7fb; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <strong>Your Question:</strong> ${escapeHtml(explanation.user_query || 'N/A')}
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #667eea; font-size: 1.1em; margin-bottom: 15px;">📊 Data Sources Used</h3>
+                    ${formatDataSources(explanation.data_sources)}
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #667eea; font-size: 1.1em; margin-bottom: 15px;">🔎 Patterns Detected</h3>
+                    ${formatPatterns(explanation.patterns_detected)}
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #667eea; font-size: 1.1em; margin-bottom: 15px;">⚠️ Risk Factors Identified</h3>
+                    ${formatRiskFactors(explanation.risk_factors)}
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #667eea; font-size: 1.1em; margin-bottom: 15px;">🧠 Recommendation Logic</h3>
+                    ${formatLogic(explanation.recommendation_logic)}
+                </div>
+                
+                <div style="background: ${getConfidenceColor(explanation.confidence_level.level)}; 
+                           padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <strong>Confidence Level:</strong> ${explanation.confidence_level.level} 
+                    (${explanation.confidence_level.percentage}%)
+                    <br><small>${explanation.confidence_level.reason}</small>
+                </div>
+                
+                <div style="text-align: center; padding-top: 15px; border-top: 1px solid #eee;">
+                    <button onclick="this.closest('.modal-wrapper').remove()" 
+                            style="padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                   color: white; border: none; border-radius: 25px; cursor: pointer; font-size: 1em;">
+                        Got it!
+                    </button>
+                </div>
+            `;
+            
+            modalContent.innerHTML = html;
+            modal.appendChild(modalContent);
+            modal.className = 'modal-wrapper';
+            document.body.appendChild(modal);
+            
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+        
+        function formatDataSources(sources) {
+            let html = '';
+            
+            if (sources.family_history && sources.family_history.length > 0) {
+                html += '<div style="margin-bottom: 15px;"><strong>👨‍👩‍👧 Family History:</strong><ul style="margin: 5px 0;">';
+                sources.family_history.forEach(item => {
+                    html += `<li>${escapeHtml(item)}</li>`;
+                });
+                html += '</ul></div>';
+            }
+            
+            if (sources.test_results && sources.test_results.length > 0) {
+                html += '<div style="margin-bottom: 15px;"><strong>🧪 Test Results:</strong><ul style="margin: 5px 0;">';
+                sources.test_results.forEach(item => {
+                    html += `<li>${escapeHtml(item.text)} <span style="color: #667eea;">(${item.relevance_score} match)</span></li>`;
+                });
+                html += '</ul></div>';
+            }
+            
+            if (sources.medications && sources.medications.length > 0) {
+                html += '<div style="margin-bottom: 15px;"><strong>💊 Medications:</strong><ul style="margin: 5px 0;">';
+                sources.medications.forEach(item => {
+                    html += `<li>${escapeHtml(item.text)} <span style="color: #667eea;">(${item.relevance_score} match)</span></li>`;
+                });
+                html += '</ul></div>';
+            }
+            
+            return html || '<p style="color: #999;">No specific data sources identified</p>';
+        }
+        
+        function formatPatterns(patterns) {
+            if (!patterns || patterns.length === 0) {
+                return '<p style="color: #999;">No patterns detected</p>';
+            }
+            
+            let html = '<ul style="margin: 0; padding-left: 20px;">';
+            patterns.forEach(pattern => {
+                html += `<li style="margin: 8px 0;">${pattern}</li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+        
+        function formatRiskFactors(factors) {
+            if (!factors || factors.length === 0) {
+                return '<p style="color: #999;">No risk factors identified</p>';
+            }
+            
+            let html = '';
+            factors.forEach(factor => {
+                const severityColor = factor.severity === 'High' ? '#d32f2f' : 
+                                     factor.severity === 'Medium' ? '#f57c00' : '#388e3c';
+                html += `
+                    <div style="border-left: 4px solid ${severityColor}; padding: 10px; margin-bottom: 10px; background: #f9f9f9;">
+                        <strong style="color: ${severityColor};">${factor.factor}</strong> 
+                        <span style="background: ${severityColor}; color: white; padding: 2px 8px; 
+                                     border-radius: 10px; font-size: 0.8em; margin-left: 5px;">
+                            ${factor.severity}
+                        </span>
+                        <p style="margin: 5px 0; font-size: 0.9em;">${factor.description}</p>
+                        <p style="margin: 5px 0; font-size: 0.85em; color: #555;">
+                            <strong>Mitigation:</strong> ${factor.mitigation}
+                        </p>
+                    </div>
+                `;
+            });
+            return html;
+        }
+        
+        function formatLogic(logic) {
+            let html = '';
+            
+            if (logic.decision_tree && logic.decision_tree.length > 0) {
+                html += '<div style="margin-bottom: 15px;"><strong>Decision Process:</strong><ol style="margin: 5px 0; padding-left: 20px;">';
+                logic.decision_tree.forEach(step => {
+                    html += `<li style="margin: 5px 0;">${escapeHtml(step)}</li>`;
+                });
+                html += '</ol></div>';
+            }
+            
+            if (logic.medical_guidelines && logic.medical_guidelines.length > 0) {
+                html += '<div style="margin-bottom: 15px;"><strong>📋 Guidelines Referenced:</strong><ul style="margin: 5px 0;">';
+                logic.medical_guidelines.forEach(guideline => {
+                    html += `<li>${escapeHtml(guideline)}</li>`;
+                });
+                html += '</ul></div>';
+            }
+            
+            if (logic.personalization_factors && logic.personalization_factors.length > 0) {
+                html += '<div><strong>🎯 Personalization Factors:</strong><ul style="margin: 5px 0;">';
+                logic.personalization_factors.forEach(factor => {
+                    html += `<li>${escapeHtml(factor)}</li>`;
+                });
+                html += '</ul></div>';
+            }
+            
+            return html || '<p style="color: #999;">No logic details available</p>';
+        }
+        
+        function getConfidenceColor(level) {
+            if (level === 'High') return '#e8f5e9';
+            if (level === 'Medium') return '#fff3e0';
+            return '#ffebee';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Format patient ID input
+        patientIdInput.addEventListener('input', (e) => {
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>

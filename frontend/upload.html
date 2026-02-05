@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Medical Records - AI Healthcare Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section-title {
+            color: #333;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title::before {
+            content: "📋";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .upload-area:hover {
+            background: #f0f4ff;
+            border-color: #764ba2;
+        }
+        
+        .upload-area.drag-over {
+            background: #e6f0ff;
+            border-color: #4CAF50;
+        }
+        
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-list {
+            margin-top: 20px;
+        }
+        
+        .file-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .file-item .name {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .file-item .size {
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        .remove-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .remove-btn:hover {
+            background: #cc0000;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-group small {
+            color: #666;
+            font-size: 0.85em;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .consent-section {
+            background: #fff9e6;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #ffc107;
+        }
+        
+        .checkbox-group {
+            margin: 15px 0;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            margin-top: 3px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            color: #333;
+            font-size: 0.95em;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result-section {
+            display: none;
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .result-section.show {
+            display: block;
+        }
+        
+        .result-section h2 {
+            color: #155724;
+            margin-bottom: 20px;
+        }
+        
+        .patient-id {
+            font-size: 2em;
+            font-weight: bold;
+            color: #28a745;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            letter-spacing: 2px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            color: #856404;
+            margin: 15px 0;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 AI Healthcare Assistant</h1>
+            <p>Upload your medical records to get started</p>
+        </div>
+
+        <form id="uploadForm">
+            <!-- Medical Documents Upload -->
+            <div class="section">
+                <h3 class="section-title">Medical Documents</h3>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📤</div>
+                    <h3>Click or drag medical images here</h3>
+                    <p style="color: #666; margin-top: 10px;">Lab reports, prescriptions, consultation notes (Images only)</p>
+                    <input type="file" id="fileInput" class="file-input" accept="image/*" multiple>
+                </div>
+                <div class="file-list" id="fileList"></div>
+            </div>
+
+            <!-- Family History Form -->
+            <div class="section">
+                <h3 class="section-title">Family Medical History</h3>
+                <p style="color: #666; margin-bottom: 20px;">Help us provide personalized care by sharing your family's health history</p>
+                
+                <div class="form-group">
+                    <label>Does your father have any chronic conditions? (e.g., Diabetes, Hypertension, Heart Disease)</label>
+                    <input type="text" id="fatherHistory" name="fatherHistory" placeholder="Enter conditions or type 'None'">
+                    <small>Example: Type 2 Diabetes (since age 45), Hypertension</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Does your mother have any chronic conditions?</label>
+                    <input type="text" id="motherHistory" name="motherHistory" placeholder="Enter conditions or type 'None'">
+                    <small>Example: Thyroid disorder, Osteoporosis</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Do any siblings have chronic conditions or genetic disorders?</label>
+                    <input type="text" id="siblingHistory" name="siblingHistory" placeholder="Enter conditions or type 'None'">
+                    <small>Example: PCOD, Asthma</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Family history of serious diseases? (Cancer, Heart Disease, etc.)</label>
+                    <input type="text" id="familyDiseases" name="familyDiseases" placeholder="Enter diseases or type 'None'">
+                    <small>Example: Grandfather had heart attack at 62</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Any additional family medical history (Optional)</label>
+                    <textarea id="additionalHistory" name="additionalHistory" placeholder="Type any additional information here..."></textarea>
+                </div>
+            </div>
+
+            <!-- Consent Section -->
+            <div class="section consent-section">
+                <h3 class="section-title">📜 Consent & Permissions</h3>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="consent1" name="consent1" required>
+                        <label for="consent1">I consent to store my medical data securely in the hospital database</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="consent2" name="consent2" required>
+                        <label for="consent2">Allow AI to analyze patterns across my medical documents for health insights</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="consent3" name="consent3" required>
+                        <label for="consent3">Enable proactive health alerts and screening reminders based on my health data</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="consent4" name="consent4" required>
+                        <label for="consent4">Autonomously extract medication schedules and set reminders (medication refill alerts when <5 days remaining)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="consent5" name="consent5" required>
+                        <label for="consent5">Use family history to personalize risk assessments and recommendations</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="consent6" name="consent6" required>
+                        <label for="consent6">Send appointment booking suggestions when severe conditions are detected</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                🚀 Upload & Generate My Health Profile
+            </button>
+        </form>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <h3 style="color: #667eea;">Processing your medical records...</h3>
+            <p style="color: #666;">This may take a few moments</p>
+        </div>
+
+        <!-- Result Section -->
+        <div class="result-section" id="resultSection">
+            <h2>✅ Your Health Profile is Ready!</h2>
+            <p style="color: #155724; margin-bottom: 10px;">Save this Patient ID securely - you'll need it to access your chatbot</p>
+            
+            <div class="patient-id" id="patientId">PT-2026-XXXX</div>
+            
+            <div class="warning">
+                <strong>⚠️ Important:</strong> Store this ID somewhere safe (screenshot, notes, or write it down). 
+                You'll use this ID to log into the chatbot and access your personalized health assistant.
+            </div>
+            
+            <button onclick="window.location.href='chatbot.html'" 
+                    style="background: #28a745; color: white; border: none; padding: 15px 30px; 
+                           border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-top: 20px;">
+                Continue to Chatbot →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const uploadForm = document.getElementById('uploadForm');
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('resultSection');
+        const patientIdDisplay = document.getElementById('patientId');
+        
+        let selectedFiles = [];
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // File selection handler
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            for (let file of files) {
+                if (file.type.startsWith('image/')) {
+                    selectedFiles.push(file);
+                    addFileToList(file);
+                } else {
+                    alert('Please upload only image files!');
+                }
+            }
+        }
+
+        function addFileToList(file) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <div>
+                    <div class="name">📄 ${file.name}</div>
+                    <div class="size">${(file.size / 1024).toFixed(2)} KB</div>
+                </div>
+                <button type="button" class="remove-btn" onclick="removeFile('${file.name}')">Remove</button>
+            `;
+            fileList.appendChild(fileItem);
+        }
+
+        function removeFile(fileName) {
+            selectedFiles = selectedFiles.filter(f => f.name !== fileName);
+            renderFileList();
+        }
+
+        function renderFileList() {
+            fileList.innerHTML = '';
+            selectedFiles.forEach(file => addFileToList(file));
+        }
+
+        // Form submission
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Validation
+            if (selectedFiles.length === 0) {
+                alert('Please upload at least one medical document!');
+                return;
+            }
+
+            const requiredConsents = ['consent1', 'consent2', 'consent3', 'consent4', 'consent5', 'consent6'];
+            const allConsented = requiredConsents.every(id => document.getElementById(id).checked);
+            
+            if (!allConsented) {
+                alert('Please accept all consent checkboxes to proceed!');
+                return;
+            }
+
+            // Prepare form data
+            const formData = new FormData();
+            
+            selectedFiles.forEach((file, index) => {
+                formData.append('files', file);
+            });
+
+            // Add family history
+            formData.append('fatherHistory', document.getElementById('fatherHistory').value || 'None');
+            formData.append('motherHistory', document.getElementById('motherHistory').value || 'None');
+            formData.append('siblingHistory', document.getElementById('siblingHistory').value || 'None');
+            formData.append('familyDiseases', document.getElementById('familyDiseases').value || 'None');
+            formData.append('additionalHistory', document.getElementById('additionalHistory').value || '');
+
+            // Show loading
+            uploadForm.style.display = 'none';
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch('http://localhost:8000/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Show result
+                    loading.classList.remove('show');
+                    resultSection.classList.add('show');
+                    patientIdDisplay.textContent = data.patient_id;
+                } else {
+                    throw new Error(data.detail || 'Upload failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+                loading.classList.remove('show');
+                uploadForm.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
